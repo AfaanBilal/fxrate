@@ -4,7 +4,7 @@ FxRate
 Author: **[Afaan Bilal](https://afaan.dev)**
 
 ## Introduction
-**FxRate** is a mobile app to display quickly convert currencies built using React Native and TypeScript.
+**FxRate** is a mobile app to quickly convert currencies built using React Native and TypeScript.
 
 ---
 
