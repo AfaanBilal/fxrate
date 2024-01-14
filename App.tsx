@@ -10,10 +10,12 @@
 import React from 'react';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import { Linking, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import SelectDropdown from 'react-native-select-dropdown';
 import { EvilIcons } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { Grid, LineChart, YAxis } from 'react-native-svg-charts';
+import * as shape from 'd3-shape';
 
 import { Fonts } from './src/utils/fonts';
 import { Colors } from './src/utils/colors';
@@ -42,6 +44,9 @@ export default function App() {
 
     const [date, setDate] = React.useState('');
 
+    const [chartData, setChartData] = React.useState<Array<number>>([]);
+    const [chartLoading, setChartLoading] = React.useState(true);
+
     const calculateRates = async () => {
         setValueR('...');
 
@@ -53,7 +58,27 @@ export default function App() {
 
     React.useEffect(() => {
         calculateRates();
+        getChartData();
     }, [curL, curR]);
+
+
+    const getChartData = async () => {
+        setChartLoading(true);
+
+        const chart = [];
+        for (let i = 0; i < 5; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const data = await (await fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/${d.toISOString().slice(0, 10)}/currencies/${curL.toLowerCase()}/${curR.toLowerCase()}.json`)).json();
+
+            chart.push(Number(parseFloat(data[curR.toLowerCase()]).toFixed(3)));
+        }
+
+        console.log(chart);
+
+        setChartData(chart);
+        setChartLoading(false);
+    };
 
     if (!fontsLoaded) return null;
 
@@ -103,10 +128,10 @@ export default function App() {
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingBottom: 12 }}>
                     <TextInput
-                        style={{ ...styles.input, borderColor: Colors.RED }}
+                        style={{ ...styles.input, borderColor: Colors.RED, color: Colors.RED }}
                         value={valueR}
                         placeholder={curR}
-                        placeholderTextColor={Colors.DARK_GRAY}
+                        placeholderTextColor={Colors.RED}
                         editable={false}
                         selectTextOnFocus={false}
                     />
@@ -133,18 +158,43 @@ export default function App() {
                         renderSearchInputLeftIcon={() => <EvilIcons name="search" size={20} color={Colors.DARK} />}
                     />
                 </View>
-                <View style={styles.updatedContainer}></View>
-                {date &&
-                    <View>
+                <View style={styles.line}></View>
+                <View style={{ paddingHorizontal: 32 }}>
+                    <Text style={{ fontSize: 18, color: Colors.RED, fontFamily: Fonts.SourceSansPro }}>Last 5 days</Text>
+                    {chartLoading ?
+                        <View style={{ height: 180, alignItems: 'center', justifyContent: 'center' }}>
+                            <ActivityIndicator size="large" color={Colors.RED} />
+                        </View> :
+                        <View style={{ height: 180, flexDirection: 'row' }}>
+                            <YAxis
+                                data={chartData}
+                                contentInset={{ top: 20, bottom: 20 }}
+                                svg={{
+                                    fill: Colors.DARK_GRAY,
+                                    fontSize: 10,
+                                }}
+                                numberOfTicks={5}
+                                formatLabel={(value) => ` ${value} `}
+                            />
+                            <LineChart
+                                style={{ height: 180, flex: 1, marginLeft: 16 }}
+                                data={chartData}
+                                contentInset={{ top: 20, bottom: 20 }}
+                                curve={shape.curveBasis}
+                                svg={{ stroke: Colors.RED }}>
+                                <Grid />
+                            </LineChart>
+                        </View>
+                    }
+                    {date &&
                         <Text style={styles.updatedText}>
-                            Updated as of <Text style={{ color: Colors.RED }}> {date}</Text>.
+                            Updated as of <Text style={{ color: Colors.RED }}> {date}</Text>
                         </Text>
-                    </View>
-                }
-                <View style={{ flex: 1 }}></View>
-                <View style={{ flexDirection: 'row', justifyContent: 'center', padding: 12 }}>
+                    }
+                </View>
+                <View style={{ flex: 1, alignItems: 'flex-end', flexDirection: 'row', justifyContent: 'center', paddingBottom: 16 }}>
                     <TouchableOpacity onPress={() => Linking.openURL('https://afaan.dev')}>
-                        <Text style={{ fontFamily: Fonts.Ubuntu, fontSize: 18, color: Colors.DARK_GRAY }}>
+                        <Text style={{ fontFamily: Fonts.Ubuntu, fontSize: 14, color: Colors.DARK_GRAY }}>
                             &copy; Afaan Bilal (afaan.dev)
                         </Text>
                     </TouchableOpacity>
@@ -207,12 +257,13 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.BLACK,
         color: Colors.WHITE,
     },
-    updatedContainer: {
+    line: {
         borderBottomColor: Colors.DARK_GRAY,
         borderBottomWidth: 1,
-        marginHorizontal: 32
+        marginHorizontal: 32,
     },
     updatedText: {
+        paddingTop: 24,
         fontFamily: Fonts.Ubuntu,
         fontSize: 16,
         textAlign: 'center',
