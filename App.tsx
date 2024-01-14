@@ -61,10 +61,9 @@ export default function App() {
         <SafeAreaView style={{ backgroundColor: Colors.DARK, flex: 1 }}>
             <StatusBar style="light" />
             <View style={styles.container}>
-                <View style={{ paddingTop: 24, alignItems: 'center' }}>
+                <View style={{ paddingTop: 32, alignItems: 'center', borderBottomColor: Colors.DARK_GRAY, borderBottomWidth: 1, marginHorizontal: 32 }}>
                     <Text style={{ fontSize: 48, fontFamily: Fonts.Borel, color: Colors.RED }}>FxRate</Text>
                 </View>
-                <View style={{ borderBottomColor: Colors.DARK_GRAY, borderBottomWidth: 1, marginHorizontal: 32 }}></View>
                 <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingTop: 12 }}>
                     <TextInput
                         style={styles.input}
