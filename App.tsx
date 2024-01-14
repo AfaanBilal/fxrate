@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
     dropdown1BtnTxtStyle: {
         color: Colors.WHITE,
         fontSize: 32,
+        fontFamily: Fonts.Ubuntu,
     },
     dropdown1DropdownStyle: {
         backgroundColor: Colors.BLACK,
