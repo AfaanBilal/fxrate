@@ -37,8 +37,35 @@ export default function App() {
     const [valueL, setValueL] = React.useState('1');
     const [curL, setCurL] = React.useState('USD');
 
-    const [valueR, setValueR] = React.useState('');
+    const [valueR, setValueR] = React.useState('...');
     const [curR, setCurR] = React.useState('INR');
+
+    const calculateRates = async (sourceLeft = true) => {
+        const sourceValue = parseFloat(sourceLeft ? valueL : valueR);
+        if (!sourceValue) return;
+
+        if (sourceLeft) {
+            setValueR('...');
+        } else {
+            setValueL('...');
+        }
+
+        const sourceCur = (sourceLeft ? curL : curR).toLowerCase();
+        const targetCur = (sourceLeft ? curR : curL).toLowerCase();
+
+        const data = await (await fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/${sourceCur}/${targetCur}.json`)).json();
+        const targetValue = (data[targetCur] * sourceValue).toFixed(3);
+
+        if (sourceLeft) {
+            setValueR(targetValue);
+        } else {
+            setValueL(targetValue);
+        }
+    };
+
+    React.useEffect(() => {
+        calculateRates();
+    }, []);
 
     if (!fontsLoaded) return null;
 
@@ -50,10 +77,11 @@ export default function App() {
                     <Text style={{ fontSize: 48, fontFamily: Fonts.Borel, color: Colors.RED }}>FxRate</Text>
                 </View>
                 <View style={{ borderBottomColor: Colors.RED, borderBottomWidth: 1, marginHorizontal: 32 }}></View>
-                <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingTop: 24 }}>
+                <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingTop: 12 }}>
                     <TextInput
                         style={styles.input}
                         onChangeText={v => setValueL(v)}
+                        onBlur={() => calculateRates(false)}
                         value={valueL}
                         placeholder={curL}
                         placeholderTextColor={Colors.DARK_GRAY}
@@ -64,7 +92,7 @@ export default function App() {
                         data={currencies}
                         defaultValue={curL}
                         defaultButtonText={curL}
-                        onSelect={(selectedItem, index) => { setCurL(selectedItem.code.toUpperCase()); }}
+                        onSelect={(selectedItem, index) => { setCurL(selectedItem.code.toUpperCase()); calculateRates(); }}
                         buttonTextAfterSelection={(selectedItem, index) => selectedItem.code.toUpperCase()}
                         rowTextForSelection={(item, index) => item.code.toUpperCase()}
                         buttonStyle={styles.dropdown1BtnStyle}
@@ -86,10 +114,11 @@ export default function App() {
                 <View style={{ alignItems: 'center' }}>
                     <FontAwesome5 name="equals" size={64} color={Colors.RED} />
                 </View>
-                <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingBottom: 24 }}>
+                <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingBottom: 12 }}>
                     <TextInput
                         style={styles.input}
                         onChangeText={v => setValueR(v)}
+                        onBlur={() => calculateRates(false)}
                         value={valueR}
                         placeholder={curR}
                         placeholderTextColor={Colors.DARK_GRAY}
@@ -100,7 +129,7 @@ export default function App() {
                         data={currencies}
                         defaultValue={curR}
                         defaultButtonText={curR}
-                        onSelect={(selectedItem, index) => { setCurR(selectedItem.code.toUpperCase()); }}
+                        onSelect={(selectedItem, index) => { setCurR(selectedItem.code.toUpperCase()); calculateRates(); }}
                         buttonTextAfterSelection={(selectedItem, index) => selectedItem.code.toUpperCase()}
                         rowTextForSelection={(item, index) => item.code.toUpperCase()}
                         buttonStyle={styles.dropdown1BtnStyle}
@@ -134,7 +163,7 @@ export default function App() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        gap: 32,
+        gap: 16,
     },
     input: {
         width: 150,
