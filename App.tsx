@@ -134,10 +134,10 @@ export default function App() {
                         renderSearchInputLeftIcon={() => <EvilIcons name="search" size={20} color={Colors.DARK} />}
                     />
                 </View>
-                <View style={{ borderBottomColor: Colors.DARK_GRAY, borderBottomWidth: 1, marginHorizontal: 32 }}></View>
+                <View style={styles.updatedContainer}></View>
                 {date &&
                     <View>
-                        <Text style={{ fontFamily: Fonts.Ubuntu, fontSize: 16, textAlign: 'center', color: Colors.DARK_GRAY }}>
+                        <Text style={styles.updatedText}>
                             Updated as of <Text style={{ color: Colors.RED }}> {date}</Text>.
                         </Text>
                     </View>
@@ -207,5 +207,16 @@ const styles = StyleSheet.create({
         borderBottomColor: Colors.DARK,
         backgroundColor: Colors.BLACK,
         color: Colors.WHITE,
+    },
+    updatedContainer: {
+        borderBottomColor: Colors.DARK_GRAY,
+        borderBottomWidth: 1,
+        marginHorizontal: 32
+    },
+    updatedText: {
+        fontFamily: Fonts.Ubuntu,
+        fontSize: 16,
+        textAlign: 'center',
+        color: Colors.DARK_GRAY
     },
 });
