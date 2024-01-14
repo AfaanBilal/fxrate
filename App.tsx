@@ -58,6 +58,7 @@ export default function App() {
                         placeholder={curL}
                         placeholderTextColor={Colors.DARK_GRAY}
                         keyboardType="numeric"
+                        returnKeyType="done"
                     />
                     <SelectDropdown
                         data={currencies}
@@ -93,6 +94,7 @@ export default function App() {
                         placeholder={curR}
                         placeholderTextColor={Colors.DARK_GRAY}
                         keyboardType="numeric"
+                        returnKeyType="done"
                     />
                     <SelectDropdown
                         data={currencies}
