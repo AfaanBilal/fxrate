@@ -10,7 +10,7 @@
 import React from 'react';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import SelectDropdown from 'react-native-select-dropdown';
 import { EvilIcons } from '@expo/vector-icons';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -40,32 +40,20 @@ export default function App() {
     const [valueR, setValueR] = React.useState('...');
     const [curR, setCurR] = React.useState('INR');
 
-    const calculateRates = async (sourceLeft = true) => {
-        const sourceValue = parseFloat(sourceLeft ? valueL : valueR);
-        if (!sourceValue) return;
+    const [date, setDate] = React.useState('');
 
-        if (sourceLeft) {
-            setValueR('...');
-        } else {
-            setValueL('...');
-        }
+    const calculateRates = async () => {
+        setValueR('...');
 
-        const sourceCur = (sourceLeft ? curL : curR).toLowerCase();
-        const targetCur = (sourceLeft ? curR : curL).toLowerCase();
+        const data = await (await fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/${curL.toLowerCase()}/${curR.toLowerCase()}.json`)).json();
 
-        const data = await (await fetch(`https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/${sourceCur}/${targetCur}.json`)).json();
-        const targetValue = (data[targetCur] * sourceValue).toFixed(3);
-
-        if (sourceLeft) {
-            setValueR(targetValue);
-        } else {
-            setValueL(targetValue);
-        }
+        setDate(new Date(data.date).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }));
+        setValueR((data[curR.toLowerCase()] * parseFloat(valueL)).toFixed(2));
     };
 
     React.useEffect(() => {
         calculateRates();
-    }, []);
+    }, [curL, curR]);
 
     if (!fontsLoaded) return null;
 
@@ -76,12 +64,12 @@ export default function App() {
                 <View style={{ paddingTop: 24, alignItems: 'center' }}>
                     <Text style={{ fontSize: 48, fontFamily: Fonts.Borel, color: Colors.RED }}>FxRate</Text>
                 </View>
-                <View style={{ borderBottomColor: Colors.RED, borderBottomWidth: 1, marginHorizontal: 32 }}></View>
+                <View style={{ borderBottomColor: Colors.DARK_GRAY, borderBottomWidth: 1, marginHorizontal: 32 }}></View>
                 <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingTop: 12 }}>
                     <TextInput
                         style={styles.input}
                         onChangeText={v => setValueL(v)}
-                        onBlur={() => calculateRates(false)}
+                        onBlur={() => calculateRates()}
                         value={valueL}
                         placeholder={curL}
                         placeholderTextColor={Colors.DARK_GRAY}
@@ -92,7 +80,7 @@ export default function App() {
                         data={currencies}
                         defaultValue={curL}
                         defaultButtonText={curL}
-                        onSelect={(selectedItem, index) => { setCurL(selectedItem.code.toUpperCase()); calculateRates(); }}
+                        onSelect={(selectedItem, index) => setCurL(selectedItem.code.toUpperCase())}
                         buttonTextAfterSelection={(selectedItem, index) => selectedItem.code.toUpperCase()}
                         rowTextForSelection={(item, index) => item.code.toUpperCase()}
                         buttonStyle={styles.dropdown1BtnStyle}
@@ -112,24 +100,22 @@ export default function App() {
                     />
                 </View>
                 <View style={{ alignItems: 'center' }}>
-                    <FontAwesome5 name="equals" size={64} color={Colors.RED} />
+                    <FontAwesome5 name="equals" size={56} color={Colors.RED} />
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'center', paddingBottom: 12 }}>
                     <TextInput
-                        style={styles.input}
-                        onChangeText={v => setValueR(v)}
-                        onBlur={() => calculateRates(false)}
+                        style={{ ...styles.input, borderColor: Colors.RED }}
                         value={valueR}
                         placeholder={curR}
                         placeholderTextColor={Colors.DARK_GRAY}
-                        keyboardType="numeric"
-                        returnKeyType="done"
+                        editable={false}
+                        selectTextOnFocus={false}
                     />
                     <SelectDropdown
                         data={currencies}
                         defaultValue={curR}
                         defaultButtonText={curR}
-                        onSelect={(selectedItem, index) => { setCurR(selectedItem.code.toUpperCase()); calculateRates(); }}
+                        onSelect={(selectedItem, index) => setCurR(selectedItem.code.toUpperCase())}
                         buttonTextAfterSelection={(selectedItem, index) => selectedItem.code.toUpperCase()}
                         rowTextForSelection={(item, index) => item.code.toUpperCase()}
                         buttonStyle={styles.dropdown1BtnStyle}
@@ -148,12 +134,21 @@ export default function App() {
                         renderSearchInputLeftIcon={() => <EvilIcons name="search" size={20} color={Colors.DARK} />}
                     />
                 </View>
-                <View style={{ borderBottomColor: Colors.RED, borderBottomWidth: 1, marginHorizontal: 32 }}></View>
+                <View style={{ borderBottomColor: Colors.DARK_GRAY, borderBottomWidth: 1, marginHorizontal: 32 }}></View>
+                {date &&
+                    <View>
+                        <Text style={{ fontFamily: Fonts.Ubuntu, fontSize: 16, textAlign: 'center', color: Colors.DARK_GRAY }}>
+                            Updated as of <Text style={{ color: Colors.RED }}> {date}</Text>.
+                        </Text>
+                    </View>
+                }
                 <View style={{ flex: 1 }}></View>
-                <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                    <Text style={{ fontFamily: Fonts.Ubuntu, fontSize: 18, color: Colors.DARK_GRAY }}>
-                        &copy; Afaan Bilal (afaan.dev)
-                    </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'center', padding: 12 }}>
+                    <TouchableOpacity onPress={() => Linking.openURL('https://afaan.dev')}>
+                        <Text style={{ fontFamily: Fonts.Ubuntu, fontSize: 18, color: Colors.DARK_GRAY }}>
+                            &copy; Afaan Bilal (afaan.dev)
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </SafeAreaView>
