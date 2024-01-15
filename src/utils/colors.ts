@@ -12,6 +12,9 @@ export const Colors = {
     WHITE: '#FFFFFF',
     SOFT_WHITE: '#F9F9F9',
 
+    INPUT_BLACK: '#111111',
+    GRID: '#333d4a',
+
     DARK: '#222831',
     BLUE: '#2D4059',
     RED: '#FF5722',
