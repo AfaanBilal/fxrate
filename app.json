@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ebce3e4a-4115-49fc-86c2-830ef91c68f1"
+      }
+    },
+    "owner": "afaan"
   }
 }
