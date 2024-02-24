@@ -12,7 +12,7 @@ Author: **[Afaan Bilal](https://afaan.dev)**
 
 ## Screenshots
 
-![FxRate](screenshots/fxrate.png)
+![FxRate](screenshots/fxrate-hero.png)
 
 ---
 
