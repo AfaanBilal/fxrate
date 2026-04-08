@@ -14,11 +14,11 @@
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-select-dropdown": "^3.4.0",
-    "react-native-svg": "15.12.1",
+    "react-native-svg": "15.15.4",
     "react-native-svg-charts": "^5.4.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.0",
+    "@babel/core": "^7.29.0",
     "@types/react": "~19.1.10",
     "@types/react-native-svg-charts": "^5.0.16",
     "babel-preset-expo": "~54.0.10",
