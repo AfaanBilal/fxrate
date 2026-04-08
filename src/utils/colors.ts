@@ -16,9 +16,12 @@ export const Colors = {
     GRID: '#333d4a',
 
     DARK: '#222831',
+    DARK_LIGHTER: '#2b3440',
     BLUE: '#2D4059',
     RED: '#FF5722',
+    RED_MUTED: 'rgba(255, 87, 34, 0.15)',
     GRAY: '#EEEEEE',
 
     DARK_GRAY: '#999999',
+    MID_GRAY: '#666666',
 };
