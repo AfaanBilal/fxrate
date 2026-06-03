@@ -10,11 +10,12 @@
 import React from 'react';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Linking, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SelectDropdown from 'react-native-select-dropdown';
 import { EvilIcons, Feather } from '@expo/vector-icons';
-import { Grid, LineChart, YAxis } from 'react-native-svg-charts';
-import * as shape from 'd3-shape';
+import { LineChart } from 'react-native-gifted-charts';
+import Toast from 'react-native-toast-message';
 
 import { Fonts } from './src/utils/fonts';
 import { Colors } from './src/utils/colors';
@@ -60,19 +61,70 @@ export default function App() {
     };
 
     const getChartData = async () => {
-        setChartLoading(true);
+        try {
+            setChartLoading(true);
 
-        const chart = [];
-        for (let i = 0; i < 5; i++) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const data = await (await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${d.toISOString().slice(0, 10)}/v1/currencies/${curL.toLowerCase()}.json`)).json();
+            const chart = [];
+            let invalidDataFound = false;
 
-            chart.push(Number(parseFloat(data[curL.toLowerCase()][curR.toLowerCase()]).toFixed(3)));
+            for (let i = 0; i < 5; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const response = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${d.toISOString().slice(0, 10)}/v1/currencies/${curL.toLowerCase()}.json`);
+
+                if (!response.ok) {
+                    invalidDataFound = true;
+                    continue;
+                }
+
+                const text = await response.text();
+
+                let data;
+
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    invalidDataFound = true;
+                    continue;
+                }
+
+                const rate = data?.[curL.toLowerCase()]?.[curR.toLowerCase()];
+
+                if (typeof rate === 'number' && Number.isFinite(rate)) {
+                    chart.push(Number(rate.toFixed(3)));
+                } else {
+                    invalidDataFound = true;
+                }
+            }
+
+            if (invalidDataFound && chart.length === 0) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Chart Data Unavailable',
+                    text2: `No data for ${curL} → ${curR}`,
+                });
+            }
+
+            if (chart.length === 0) {
+                chart.push(0);
+            }
+
+            setChartData(chart);
+        } catch (error) {
+            console.log('Chart Error:', error);
+
+            Toast.show({
+                type: 'error',
+                text1: 'Chart Error',
+                text2: 'Unable to load trend data',
+            });
+
+            setChartData([0]);
+
+        } finally {
+            setChartLoading(false);
         }
 
-        setChartData(chart);
-        setChartLoading(false);
     };
 
     const swapCurrencies = () => {
@@ -214,24 +266,26 @@ export default function App() {
                             <ActivityIndicator size="large" color={Colors.RED} />
                         </View> :
                         <View style={styles.chartContainer}>
-                            <YAxis
-                                data={chartData}
-                                contentInset={{ top: 20, bottom: 20 }}
-                                svg={{
-                                    fill: Colors.DARK_GRAY,
-                                    fontSize: 10,
-                                }}
-                                numberOfTicks={5}
-                                formatLabel={(value) => ` ${value} `}
-                            />
                             <LineChart
-                                style={{ height: 180, flex: 1, marginLeft: 16 }}
-                                data={chartData}
-                                contentInset={{ top: 20, bottom: 20 }}
-                                curve={shape.curveBasis}
-                                svg={{ stroke: Colors.RED, strokeWidth: 2.5 }}>
-                                <Grid svg={{ stroke: Colors.GRID }} />
-                            </LineChart>
+                                data={chartData.length > 0 ? chartData.map(value => ({ value })) : [{ value: 0 }]}
+                                height={180}
+                                spacing={50}
+                                initialSpacing={10}
+                                color={Colors.RED}
+                                thickness={3}
+                                hideRules={false}
+                                rulesColor={Colors.GRID}
+                                yAxisColor={Colors.GRID}
+                                xAxisColor={Colors.GRID}
+                                yAxisTextStyle={{ color: Colors.DARK_GRAY }}
+                                noOfSections={4}
+                                areaChart
+                                startFillColor={Colors.RED}
+                                endFillColor={Colors.RED}
+                                startOpacity={0.25}
+                                endOpacity={0.02}
+                                hideDataPoints={false}
+                            />
                         </View>
                     }
                     {date &&
@@ -249,6 +303,7 @@ export default function App() {
                     </TouchableOpacity>
                 </View>
             </View>
+            <Toast />
         </SafeAreaView>
     );
 }
@@ -396,8 +451,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     chartContainer: {
-        height: 180,
-        flexDirection: 'row',
+        height: 220,
     },
     updatedText: {
         paddingTop: 16,
