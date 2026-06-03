@@ -14,8 +14,8 @@ import { ActivityIndicator, Linking, StyleSheet, Text, TextInput, TouchableOpaci
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SelectDropdown from 'react-native-select-dropdown';
 import { EvilIcons, Feather } from '@expo/vector-icons';
-// import { Grid, LineChart, YAxis } from 'react-native-svg-charts';
 import { LineChart } from 'react-native-gifted-charts';
+import Toast from 'react-native-toast-message';
 
 import { Fonts } from './src/utils/fonts';
 import { Colors } from './src/utils/colors';
@@ -61,23 +61,70 @@ export default function App() {
     };
 
     const getChartData = async () => {
-        setChartLoading(true);
+        try {
+            setChartLoading(true);
 
-        const chart = [];
-        for (let i = 0; i < 5; i++) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const data = await (await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${d.toISOString().slice(0, 10)}/v1/currencies/${curL.toLowerCase()}.json`)).json();
+            const chart = [];
+            let invalidDataFound = false;
 
-            const rate = data?.[curL.toLowerCase()]?.[curR.toLowerCase()];
+            for (let i = 0; i < 5; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const response = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${d.toISOString().slice(0, 10)}/v1/currencies/${curL.toLowerCase()}.json`);
 
-            if (typeof rate === 'number' && !isNaN(rate)) {
-                chart.push(Number(rate.toFixed(3)));
+                if (!response.ok) {
+                    invalidDataFound = true;
+                    continue;
+                }
+
+                const text = await response.text();
+
+                let data;
+
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    invalidDataFound = true;
+                    continue;
+                }
+
+                const rate = data?.[curL.toLowerCase()]?.[curR.toLowerCase()];
+
+                if (typeof rate === 'number' && Number.isFinite(rate)) {
+                    chart.push(Number(rate.toFixed(3)));
+                } else {
+                    invalidDataFound = true;
+                }
             }
+
+            if (invalidDataFound && chart.length === 0) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Chart Data Unavailable',
+                    text2: `No data for ${curL} → ${curR}`,
+                });
+            }
+
+            if (chart.length === 0) {
+                chart.push(0);
+            }
+
+            setChartData(chart);
+        } catch (error) {
+            console.log('Chart Error:', error);
+
+            Toast.show({
+                type: 'error',
+                text1: 'Chart Error',
+                text2: 'Unable to load trend data',
+            });
+
+            setChartData([0]);
+
+        } finally {
+            setChartLoading(false);
         }
 
-        setChartData(chart);
-        setChartLoading(false);
     };
 
     const swapCurrencies = () => {
@@ -220,7 +267,8 @@ export default function App() {
                         </View> :
                         <View style={styles.chartContainer}>
                             <LineChart
-                                data={chartData.length > 0 ? chartData.map(value => ({ value })) : [{ value: 0 }]} height={180}
+                                data={chartData.length > 0 ? chartData.map(value => ({ value })) : [{ value: 0 }]}
+                                height={180}
                                 spacing={50}
                                 initialSpacing={10}
                                 color={Colors.RED}
@@ -255,6 +303,7 @@ export default function App() {
                     </TouchableOpacity>
                 </View>
             </View>
+            <Toast />
         </SafeAreaView>
     );
 }
